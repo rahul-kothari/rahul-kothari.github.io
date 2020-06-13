@@ -1,0 +1,110 @@
+
+*{
+    margin: 0px;
+    padding: 0px;
+}
+
+h1 {
+    font: bold 20px tahoma;
+    padding: 1%;
+    text-align: center;
+}
+
+header, section, footer, aside, nav, article, hgroup {
+    display: block;
+}
+
+body {
+    text-align: center;
+    display:-webkit-box; /* allows for the parent box(body) to 
+    take in flexible child boxes  */
+    -webkit-box-pack: center; /* arranges all child flex boxes */    
+    
+}
+
+.mainBody {
+    margin: 10px auto;
+    width: 100%;
+    display:-webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-box-flex: 1;
+    background-color: lightblue;
+    
+}
+
+.header {
+    -webkit-border-radius: 1px;
+    text-shadow: 2px 0px 2px grey;
+    font: bold 88px tahoma;
+    vertical-align: middle;
+    margin: 17%;
+    
+}
+
+
+.nav {
+    background: black;
+    opacity: 50;
+    padding: 3px;
+    margin: 4px;
+    width: 100%;
+    text-align: center;
+    vertical-align: top;
+    -webkit-box-shadow: 0px 0px 2px grey;
+    text-decoration: none ;
+    position: fixed; /* Set the navbar to fixed position */
+    top: 0; /* Position the navbar at the top of the page */
+    overflow: hidden;
+}
+
+
+.nav li {
+    color: white;
+    display: inline;
+    text-align: center;
+    list-style: none;
+    padding: 85px;
+    font: bold 14px tahoma;    
+    text-decoration: none ;
+}
+
+.mainSection {
+    float: center;
+    margin: 5px; /* */
+    width: 100%;
+
+}
+
+.articleMainSection {
+    float: center; 
+    background-color: aquamarine;
+
+}
+.uolAboutMe {
+    font-style: italic;
+
+}
+
+.skill {
+    text-align: center;
+    padding: 1px;
+    text-shadow: 0px 0px 1px grey;
+    display: grid;
+
+}
+
+
+.footer {
+    clear: both;
+    text-align: center;
+    margin: 10px;
+    padding: 5px;
+    border-top: 2px solid gainsboro;
+}
+
+.line {
+    clear: both;
+    margin: 15%;
+    padding: 10px;
+    border-top: 1px solid black;
+}

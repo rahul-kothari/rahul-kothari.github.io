@@ -238,88 +238,60 @@ ul#nav li a:hover:before {
 /* ------------------------------------------------------------------ */
 
 #about {
-  background: #2B2B2B;
-  padding-top: 110px;
-  padding-bottom: 80px;
-  overflow: hidden;
+  background:whitesmoke;
 }
 
-#about a, #about a:visited {
-  color: #fff;
-  font: 14px/20px 'opensans-bold', sans-serif;
+#about h1 {
+  font: 24px/28px 'opensans-semibold', sans-serif;
+  letter-spacing: 1px;
+  text-align: center;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  color:grey;
+  text-decoration: underline;
+  text-decoration-color: black;
 }
 
-#about a:hover, #about a:focus {
-  color: rgb(0, 212, 212);
+ul#about-section-list li {
+  list-style: none; /* Remove default bullets */
+  color: black;
 }
 
-#about h2 {
-  font: 22px/30px 'opensans-bold', sans-serif;
-  color: #fff;
-  margin: 0px;
-  padding-bottom: 10px;
+ul#blog-section-list li::before{
+  content: "\20BF";  /* Add content: \2022 is the CSS Code/unicode for a bullet */
+  color:grey;
+  font-weight: bold; /* If you want it to be bold */
+  display: inline-block; /* Needed to add space between the bullet and the text */
+  width: 2em; /* Also needed for space (tweak if needed) */
 }
 
-#about h5 {
-  font: 18px/26px 'opensans-bold', sans-serif;
-  color: #fff;
+ul#blog-section-list li {
+  color: purple
 }
 
 #about p {
-  color: #fff;
+  color: black;
   font-size: 18px;
 }
 
-#about .contact-details {
-  width: 125%;
-}
-
-#about .profile-pic {
-  position: center;
-  margin-left: 35px;
-  width: 140px;
-  height: 140px;
-  border-radius: 10%;
-}
-
-#about .main-col {
-  padding-right: 5%;
-}
-
-#about .download {
-  margin-left: 18px;
-}
-
-#about .download .button i {
-  margin-right: 15px;
-  font-size: 20px;
-}
-
-#about span {
-  color: rgb(190, 190, 190);
-}
 
 #about em {
   color: whitesmoke;
 }
 
-/* work examples */
-
 /* ------------------------------------------------------------------ */
-
-/* e. Portfolio Section
+/* Portfolio Section
 /* ------------------------------------------------------------------ */
 
 #portfolio {
   background: #ebeeee;
-  background: #c6c7c7;
-  padding-top: 90px;
-  padding-bottom: 80px;
+  background: #9c9c9c;
+  padding-top: 50px;
+  padding-bottom: 30px;
 }
 
 #portfolio h1 {
   font: 24px/28px 'opensans-semibold', sans-serif;
-  text-transform: uppercase;
   letter-spacing: 1px;
   text-align: center;
   margin-bottom: 65px;
@@ -523,30 +495,31 @@ ul#nav li a:hover:before {
   opacity: 0;
 }
 
-/* Skills */
+/* ------------------------------------------------------------------ */
+/* Talks Section
+/* ------------------------------------------------------------------ */
 
-/* Skills */
 
-#skills {
+#talks {
   background: #fff;
   padding-top: 8%;
   padding-bottom: 10%;
   overflow: hidden;
 }
 
-#skills a, #skills a:visited {
+#talks a, #talks a:visited {
   color: #00CCCC;
 }
 
-#skills a:hover, #skills a:focus {
+#talks a:hover, #talks a:focus {
   color: #313131;
 }
 
-#skills .main-col {
+#talks .main-col {
   padding-right: 4%;
 }
 
-#skills h1 {
+#talks h1 {
   text-align: center;
   color: grey;
   font: 28px/32px 'opensans-bold', sans-serif;
@@ -559,31 +532,22 @@ ul#nav li a:hover:before {
   text-decoration-color: #00CCCC;
 }
 
-#skills h2 {
-  /* skills */
-  /* text-shadow: 0.6px 0.6px 2px grey; */
+#talks h2 {
   font: 200% 'librebaskerville-regular', serif;
   color: rgb(255, 255, 255);
   margin: 0 auto;
   width: 90%;
 }
 
-#skills h6 {
-  margin: 50px 0px -50px 0px;
-  text-align: center;
-  font-weight: 100;
-  color: rgb(109, 109, 109);
-  font: 18px 'librebaskerville-regular', serif;
-}
 
-#skills .stats {
+#talks .stats {
   font-size: 42px;
   font-family: "proxima-nova", Arial, "Lucida Grande", sans-serif;
   word-spacing: 10px;
   width: 100%;
 }
 
-#skills .stats hr {
+#talks .stats hr {
   border-color: rgb(129, 125, 125);
   opacity: 0.3;
   border: none;
@@ -594,14 +558,14 @@ ul#nav li a:hover:before {
   margin: -50px auto 10px;
 }
 
-#skills .stats .line {
+#talks .stats .line {
   text-align: center;
   padding: 10px;
   -webkit-transition: -webkit-transform 0.2s, color 1.2s;
   /* color fade when hovering over text */
 }
 
-#skills .stats .line:hover, active {
+#talks .stats .line:hover, active {
   -webkit-transform: scale(1.15);
   color: #00CCCC;
 }

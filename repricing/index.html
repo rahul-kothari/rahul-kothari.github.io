@@ -1,0 +1,203 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>EIP-8037 gas reservoir</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column; controls, two gas pools, a step panel, then reference notes */
+:root{
+  --bg:#f5f7fa; --surface:#ffffff; --surface-2:#edf1f6; --fg:#121821; --muted:#566271; --faint:#8a95a3; --line:#d6dde6;
+  --exec:#2a62c4; --exec-soft:#e2ebf9; --res:#b97c06; --res-soft:#fbefd3; --up:#127a4b; --down:#b1342b;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1217; --surface:#151b23; --surface-2:#1c242e; --fg:#e6ebf1; --muted:#9ba6b3; --faint:#6f7a88; --line:#29323d;
+  --exec:#6ea2ff; --exec-soft:#182a47; --res:#f0b43c; --res-soft:#3a2b0d; --up:#53c68f; --down:#f27c70; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1217; --surface:#151b23; --surface-2:#1c242e; --fg:#e6ebf1; --muted:#9ba6b3; --faint:#6f7a88; --line:#29323d;
+  --exec:#6ea2ff; --exec-soft:#182a47; --res:#f0b43c; --res-soft:#3a2b0d; --up:#53c68f; --down:#f27c70; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.6;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto;padding-block:40px 56px;display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(30px,6vw,42px);line-height:1.1;margin:0 0 10px;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:22px;line-height:1.2;margin:0 0 10px;text-wrap:balance}
+.lede{color:var(--muted);max-width:62ch;margin:0}
+.lede-list{padding-left:1.3em;display:flex;flex-direction:column;gap:4px;margin:0 0 10px}
+code,.mono{font-family:var(--f-mono);font-size:.92em}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctl .lbl{font-size:13px;color:var(--muted);min-width:88px}
+button{font:inherit;font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 12px;cursor:pointer;line-height:1.3}
+button:hover{background:var(--surface-2)}
+button:disabled{color:var(--faint);cursor:default;background:var(--surface)}
+button:focus-visible{outline:2px solid var(--exec);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--exec-soft);border-color:var(--exec);color:var(--fg)}
+.split-lbl{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.split{display:flex;height:20px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.split div{transition:width .35s ease}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.card{background:var(--surface-2);border-radius:8px;padding:12px 14px;min-width:0}
+.card .cap{font-size:13px;color:var(--muted);margin:0 0 4px}
+.card .num{font-family:var(--f-mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.card .d{font-family:var(--f-mono);font-size:13px;margin-left:6px;white-space:nowrap}
+.step{border-top:1px solid var(--line);padding-top:14px;min-height:92px}
+.step .n{font-family:var(--f-mono);font-size:12px;color:var(--faint);margin:0 0 4px}
+.step .t{margin:0;max-width:64ch}
+.reads{font-family:var(--f-mono);font-size:13.5px;color:var(--muted);min-height:22px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.nav{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.nav .note{font-size:12.5px;color:var(--faint);flex:1 1 220px}
+ol.rules{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;max-width:66ch}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.foot{font-size:13px;color:var(--muted);max-width:66ch}
+a{color:var(--exec)}
+@media (prefers-reduced-motion: reduce){.split div{transition:none}}
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Glamsterdam · EIP-8037</p>
+    <h1>Repricing of state gas vs execution gas</h1>
+    <ul class="lede lede-list">
+      <li>EIP-8037 splits a transaction's gas into two pools: execution gas and the reservoir (state gas).</li>
+      <li>Execution gas is capped to 16.7M, but total <code>tx.gas</code> is now 4.2B. Anything outside the 16.7M goes into the reservoir.</li>
+      <li>Everything is execution gas except creation of state. (See <a href="#what-pays">What pays from which pool</a>.)</li>
+      <li>If state creation is undone, the gas refund goes back to the pool where it came from.</li>
+      <li>8037 also makes new state far more expensive.</li>
+      <li><code>gasleft()</code> only sees execution gas left, not all the gas. This breaks a ton of assumptions.</li>
+    </ul>
+    <p class="lede">Step through the three assumptions this breaks, with a small transaction and a big one.</p>
+  </header>
+
+  <section class="panel" aria-label="Simulator">
+    <div class="ctl" role="group" aria-label="Assumption">
+      <span class="lbl">Assumption</span>
+      <button id="s0" type="button" onclick="pickS(0)">gasleft() only goes down</button>
+      <button id="s1" type="button" onclick="pickS(1)">Callee ran out of gas, so will I</button>
+      <button id="s2" type="button" onclick="pickS(2)">gasleft() shows what a call spent</button>
+    </div>
+    <div class="ctl" role="group" aria-label="Transaction gas limit">
+      <span class="lbl">tx.gas</span>
+      <button id="m0" type="button" onclick="pickM(0)">5M (no reservoir)</button>
+      <button id="m1" type="button" onclick="pickM(1)">20M (has a reservoir)</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div class="split-lbl" id="splitlbl"></div>
+      <div class="split" aria-hidden="true"><div id="b0" style="background:var(--faint)"></div><div id="b1" style="background:var(--exec)"></div><div id="b2" style="background:var(--res)"></div></div>
+      <div class="legend"><span><span class="dot" style="background:var(--faint)"></span>Intrinsic</span><span><span class="dot" style="background:var(--exec)"></span>gas_left, capped at 16,777,216</span><span><span class="dot" style="background:var(--res)"></span>State-gas reservoir</span></div>
+    </div>
+    <div class="cards" id="cards"></div>
+    <div class="step" aria-live="polite">
+      <p class="n" id="stepn"></p>
+      <p class="t" id="stept"></p>
+    </div>
+    <div class="reads" id="reads"></div>
+    <div class="nav">
+      <button id="back" type="button" onclick="go(-1)">← Back</button>
+      <button id="next" type="button" onclick="go(1)">Next →</button>
+      <span class="note">Execution gas of the opcodes themselves is left out so the state-gas moves are easy to see.</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>The rules behind it</h2>
+    <ol class="rules">
+      <li>At the start, up to 16,777,216 of <code>tx.gas</code> (after intrinsic gas) becomes <code>gas_left</code>. The rest goes into the reservoir.</li>
+      <li>Execution gas is paid from <code>gas_left</code> only.</li>
+      <li>State gas is paid from the reservoir first, then from <code>gas_left</code>.</li>
+      <li>When a state creation is undone, its gas is refilled last in, first out: back into <code>gas_left</code> first, up to what was taken from it.</li>
+      <li><code>gasleft()</code> returns <code>gas_left</code> only. The 63/64 rule applies to <code>gas_left</code> only; a callee borrows the whole reservoir.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2 id="what-pays">What pays from which pool</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Operation</th><th>Execution gas</th><th>State gas</th></tr></thead>
+        <tbody>
+          <tr><td>Reading state (SLOAD, BALANCE, EXTCODE*, cold access)</td><td>All of it</td><td class="num">0</td></tr>
+          <tr><td>Changing or clearing an existing slot</td><td>All of it</td><td class="num">0</td></tr>
+          <tr><td>New storage slot (zero to non-zero)</td><td>The access part</td><td class="num">64 B × 1,530 = 97,920</td></tr>
+          <tr><td>ETH to an address that doesn't exist yet</td><td>The normal call part</td><td class="num">120 B × 1,530 = 183,600</td></tr>
+          <tr><td>Deploy (CREATE, CREATE2)</td><td>Constructor, code hashing, access</td><td class="num">183,600 + 1,530 per code byte</td></tr>
+          <tr><td>EIP-7702 authorisation</td><td>Calldata, ecrecover, access</td><td class="num">35,190 (+183,600 if the account is empty)</td></tr>
+          <tr><td>Logs, memory, compute, precompiles, calldata</td><td>All of it</td><td class="num">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="foot">Based on <a href="https://eips.ethereum.org/EIPS/eip-8037">EIP-8037</a> as of October 2026. The EIP is in last call and paused after a security finding, so details can change before mainnet. Scenario 2 is an illustration built from the spec text, not a description of a specific exploit.</p>
+</main>
+
+<script>
+const f=n=>Math.round(n).toLocaleString('en-US');
+const TXS=[5000000,20000000],INTR=21000,CAP=16777216;
+function start(m){const ev=TXS[m]-INTR,gl=Math.min(CAP-INTR,ev);return{gl,res:ev-gl}}
+function scen(s,m){const st=start(m);const big=m===1;
+if(s===0){const S=97920;return big?[
+{t:'Start. gas_left is capped at 16.7M; everything above that goes into the reservoir.',gl:st.gl,res:st.res},
+{t:'SSTORE(k, 1) on an empty slot: 97,920 state gas. State gas is taken from the reservoir first.',gl:st.gl,res:st.res-S},
+{t:'a = gasleft()',gl:st.gl,res:st.res-S,read:['a',st.gl]},
+{t:'SSTORE(k, 0): the slot is zero again, so the 97,920 is refilled. It was taken from the reservoir, so it goes back there.',gl:st.gl,res:st.res},
+{t:'b = gasleft(). b − a = 0. gasleft() never saw the charge or the refill.',gl:st.gl,res:st.res,read:['b',st.gl],diff:0}]:[
+{t:'Start. tx.gas is under 16.7M, so all of it is gas_left. The reservoir is empty. This is almost every transaction today.',gl:st.gl,res:0},
+{t:'SSTORE(k, 1) on an empty slot: 97,920 state gas. The reservoir is empty, so it comes out of gas_left.',gl:st.gl-S,res:0},
+{t:'a = gasleft()',gl:st.gl-S,res:0,read:['a',st.gl-S]},
+{t:'SSTORE(k, 0): the slot is zero again, so the 97,920 is refilled. Refills go back where they came from, last in first out: into gas_left.',gl:st.gl,res:0},
+{t:'b = gasleft(). b − a = +97,920. gasleft() went up. Code that computes a − b as gas used gets a negative number: it reverts with checked math or wraps with unchecked math.',gl:st.gl,res:0,read:['b',st.gl],diff:S}]}
+if(s===1){const A=183600,G=1000000;if(!big){const g1=G-A,fw=Math.floor(g1*63/64),keep=g1-fw;return[
+{t:'The caller is mid-execution with 1,000,000 gas left. No reservoir.',gl:G,res:0,cal:0},
+{t:'CALL{value: 1 wei} to an address that does not exist yet. Creating the account costs 183,600 state gas, taken from gas_left.',gl:g1,res:0,cal:0},
+{t:'63/64 rule: the caller forwards 63/64 of what is left to the callee and keeps 1/64.',gl:keep,res:0,cal:fw},
+{t:'The callee runs out of gas. Its gas is burned.',gl:keep,res:0,cal:0},
+{t:'The failed call means the account was never created, so the 183,600 is refilled. It goes back into the caller’s gas_left.',gl:keep+A,res:0,cal:0},
+{t:'gasleft() = '+f(keep+A)+'. The old rule says a caller whose callee ran out of gas has about 1/64 left ('+f(keep)+'). Now it has about 15 times that, so post-call checks like gasleft() < sent / 63 stop catching the out-of-gas case.',gl:keep+A,res:0,cal:0,read:['c',keep+A],cmp:keep}]}
+const fw=Math.floor(G*63/64),keep=G-fw,R=st.res-A;return[
+{t:'The caller is mid-execution with 1,000,000 gas_left and a 3.2M reservoir.',gl:G,res:st.res,cal:0},
+{t:'CALL{value: 1 wei} to a fresh address. The 183,600 for account creation is charged before the call starts, and it comes out of the reservoir first.',gl:G,res:R,cal:0},
+{t:'The call starts. gas_left follows the 63/64 rule: the callee gets '+f(fw)+' and the caller keeps '+f(keep)+'. The reservoir is not split: the callee borrows all '+f(R)+' of it, so the caller holds none while the callee runs.',gl:keep,res:0,cal:fw,cres:R},
+{t:'The callee runs out of execution gas. Its gas_left is burned. Its state changes are rolled back, so the reservoir is reset to the amount it borrowed and handed back to the caller in full.',gl:keep,res:R,cal:0,cres:0},
+{t:'The account creation is rolled back too, so its 183,600 is refilled. The caller paid it from the reservoir, so it goes back to the reservoir.',gl:keep,res:st.res,cal:0},
+{t:'gasleft() = '+f(keep)+', the expected 1/64, so a gasleft() check looks normal. But the caller also holds a '+f(st.res)+' reservoir and can keep paying for new state (new slots, new accounts) after its callee ran out of gas. Code that assumed 1/64 left means not much more can happen is wrong.',gl:keep,res:st.res,cal:0,read:['c',keep]}]}
+const E=50000,S=979200;return big?[
+{t:'A bundler (ERC-4337 EntryPoint) runs a user operation and meters it with gasleft() before and after.',gl:st.gl,res:st.res},
+{t:'before = gasleft()',gl:st.gl,res:st.res,read:['before',st.gl]},
+{t:'The user op does 50,000 execution gas of work and writes 10 new slots (979,200 state gas). The state gas comes out of the reservoir.',gl:st.gl-E,res:st.res-S},
+{t:'after = gasleft(). Measured: 50,000. Actually spent: 1,029,200. The bundler bills about 5% of the real cost; the rest is paid by whoever’s gas filled the reservoir, such as other user ops in the bundle.',gl:st.gl-E,res:st.res-S,read:['after',st.gl-E],bill:[E,E+S]}]:[
+{t:'A bundler runs a user operation and meters it with gasleft() before and after. Small transaction, so no reservoir.',gl:st.gl,res:0},
+{t:'before = gasleft()',gl:st.gl,res:0,read:['before',st.gl]},
+{t:'The user op does 50,000 execution gas of work and writes 10 new slots (979,200 state gas). No reservoir, so everything comes out of gas_left.',gl:st.gl-E-S,res:0},
+{t:'after = gasleft(). Measured: 1,029,200. Actually spent: 1,029,200. Metering still works when the reservoir is empty.',gl:st.gl-E-S,res:0,read:['after',st.gl-E-S],bill:[E+S,E+S]}]}
+const HASH=['goes-up','callee-oog','blind-spot'];
+let S=0,M=0,I=0;
+try{const h=(location.hash||'').slice(1);const k=HASH.indexOf(h);if(k>=0)S=k}catch(e){}
+function pickS(s){S=s;I=0;draw()}function pickM(m){M=m;I=0;draw()}
+function go(d){const n=scen(S,M).length;I=Math.max(0,Math.min(n-1,I+d));draw()}
+function esc(t){return String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function card(dot,cap,v,prev){const dv=prev==null?0:v-prev;const ds=dv===0?'':'<span class="d" style="color:var('+(dv>0?'--up':'--down')+')">'+(dv>0?'+':'−')+f(Math.abs(dv))+'</span>';return '<div class="card"><p class="cap">'+(dot?'<span class="dot" style="background:var('+dot+')"></span>':'')+esc(cap)+'</p><span class="num">'+f(v)+'</span>'+ds+'</div>'}
+function draw(){[0,1,2].forEach(i=>document.getElementById('s'+i).setAttribute('aria-pressed',String(i===S)));[0,1].forEach(i=>document.getElementById('m'+i).setAttribute('aria-pressed',String(i===M)));
+const st=start(M),tot=TXS[M];document.getElementById('b0').style.width=(INTR/tot*100)+'%';document.getElementById('b1').style.width=(st.gl/tot*100)+'%';document.getElementById('b2').style.width=(st.res/tot*100)+'%';
+document.getElementById('splitlbl').textContent='tx.gas '+f(tot)+' = intrinsic '+f(INTR)+' + gas_left '+f(st.gl)+' + reservoir '+f(st.res);
+const steps=scen(S,M),p=steps[I],q=I>0?steps[I-1]:null;let h='';
+if(p.bill)h+='<div class="card"><p class="cap">Measured with gasleft()</p><span class="num">'+f(p.bill[0])+'</span></div><div class="card"><p class="cap">Actually spent</p><span class="num">'+f(p.bill[1])+'</span></div>';
+const C=p.cal!=null;h+=card('--exec',(C?'Caller’s gas_left':'gas_left')+' · what gasleft() returns',p.gl,q&&q.gl)+card('--res',(C?'Caller’s reservoir':'Reservoir')+' · invisible to gasleft()',p.res,q&&q.res);
+if(C)h+=card('--faint','Callee’s gas_left',p.cal,q&&q.cal)+card('--res','Callee’s reservoir · borrowed',p.cres||0,q?(q.cres||0):null);
+document.getElementById('cards').innerHTML=h;document.getElementById('stepn').textContent='Step '+(I+1)+' of '+steps.length;document.getElementById('stept').textContent=p.t;
+const rs=steps.slice(0,I+1).filter(x=>x.read).map(x=>x.read[0]+' = '+f(x.read[1]));let tail='';if(p.diff!=null)tail='   →   b − a = '+(p.diff>0?'+':'')+f(p.diff);if(p.cmp!=null)tail='   vs 1/64 rule: '+f(p.cmp);document.getElementById('reads').textContent=rs.join('   ')+tail;
+document.getElementById('back').disabled=I===0;document.getElementById('next').disabled=I===steps.length-1}
+draw();
+</script>
+
+</body></html>
